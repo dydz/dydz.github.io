@@ -81,6 +81,6 @@ if [ ! -d "$blogDirectory" ]; then
     cd "$savedCurrentWorkingDirectory"
 fi
 
-echo "To run the included web server, do:"
-echo "    cd $blogDirectory"
-echo "    bundle exec jekyll serve --livereload --open-url"
+echo "To run the included web server, do:" >&2
+echo "    cd $blogDirectory" >&2
+echo "    bundle exec jekyll serve --livereload --open-url" >&2
