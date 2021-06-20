@@ -1,0 +1,86 @@
+#!/bin/sh
+
+# Use ShellCheck, <https://www.shellcheck.net>, to analyze this script and catch common bugs.
+
+# Exit immediately if a command (individually or part of a pipeline) exits with a non-zero exit status.
+# FIXME: -o pipefail isn't available in POSIX shell.
+set -eo pipefail
+# Enable diagnostics when expanding unset variables.
+set -u
+
+hasDirectoryInPathLikeVariable()
+{
+    pathDirectories=$(echo "$1" | tr ':' "\n")
+    for directory in $pathDirectories
+    do
+        if [ "$directory" = "$2" ]; then
+            echo "1"
+            return
+        fi
+    done
+    echo "0"
+}
+
+hasDirectoryInPathEnvironmentVariable()
+{
+    hasDirectoryInPathLikeVariable "$PATH" "$1"
+}
+
+# Derived from the steps on <https://jekyllrb.com/docs/installation/macos/>.
+
+# Ensure Ruby and other developer command line tools are installed.
+echo "Running xcode-select --install..." >&2
+xcode-select --install >/dev/null 2>&1 || true
+
+if ! which ruby >/dev/null 2>&1; then
+    echo "Couldn't find ruby. Is it installed?" >&2
+    exit 1
+fi
+
+rubyVersion=$(ruby -e 'puts [RbConfig::CONFIG["MAJOR"], RbConfig::CONFIG["MINOR"], 0].join(".")') # Ignore teeny version
+pathToRubyGemBinaryDirectory="$HOME/.gem/ruby/$rubyVersion/bin"
+
+hasRubyGemBinaryDirectoryInPath=$(hasDirectoryInPathEnvironmentVariable "$pathToRubyGemBinaryDirectory")
+if [ "$hasRubyGemBinaryDirectoryInPath" = "0" ]; then
+    echo "Ensure the following is in your PATH:" >&2
+    echo "    $pathToRubyGemBinaryDirectory" >&2
+fi
+
+# Ensure "gem env gempath" lists the parent directory of $pathToRubyGemBinaryDirectory.
+# FIXME: Is this necessary?
+pathToRubyGemDirectory=$(dirname "$pathToRubyGemBinaryDirectory")
+hasRubyGemBinaryDirectoryInGemEnvironmentPaths=$(hasDirectoryInPathLikeVariable "$(gem env gempath)" "$pathToRubyGemDirectory")
+if [ "$hasRubyGemBinaryDirectoryInGemEnvironmentPaths" = "0" ]; then
+    echo "Couldn't find $pathToRubyGemDirectory in \"gem env gempath\"." >&2
+    exit 1
+fi
+
+# Check if Jekyll is installed. If not, then install latest.
+echo "Checking for Jekyll..." >&2
+gem list --silent -i jekyll
+if ! gem list --silent -i jekyll; then
+    echo "Installing latest Jekyll..." >&2
+    SDKROOT="$(xcrun --show-sdk-path)"
+    export SDKROOT
+    gem install --user-install bundler jekyll
+fi
+
+# Create blog directory
+echo "Checking for blog directory..." >&2
+programDirectory=$(dirname "$0")
+blogDirectory="$programDirectory/blog"
+if [ ! -d "$blogDirectory" ]; then
+    echo "Creating blog directory and installing Jekyll dependencies..." >&2
+    # I want to install Jekyll's dependencies without sudo access. So, skip bundle install and manually install
+    # dependencies under blog/vender/bundle.
+    jekyll new --skip-bundle blog
+    savedCurrentWorkingDirectory=$(pwd)
+    cd "$blogDirectory"
+    bundle config set --local path 'vendor/bundle'
+    bundle install
+    cd "$savedCurrentWorkingDirectory"
+fi
+
+echo "To run the included web server, do:"
+echo "    cd $blogDirectory"
+echo "    bundle exec jekyll serve --livereload --open-url"
