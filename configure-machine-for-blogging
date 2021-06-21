@@ -81,6 +81,19 @@ if [ ! -d "$blogDirectory" ]; then
     cd "$savedCurrentWorkingDirectory"
 fi
 
+# Check for Jekyll::Compose
+# See <https://github.com/jekyll/jekyll-compose>.
+# FIXME: Automate adding the jekyll-compose line (below) to the Gemfile.
+echo "Checking for jekyll-compose..." >&2
+blogGemFile="$blogDirectory/Gemfile"
+if ! BUNDLE_GEMFILE="$blogGemFile" bundle show jekyll-compose >/dev/null 2>&1; then
+    echo "Couldn't find jekyll-compose." >&2
+    echo "Add the following line to $blogGemFile:" >&2
+    echo "    gem 'jekyll-compose', group: [:jekyll_plugins]" >&2
+    echo "Then run:" >&2
+    echo "    BUNDLE_GEMFILE='$blogGemFile' bundle" >&2
+fi
+
+echo "" >&2
 echo "To run the included web server, do:" >&2
-echo "    cd $blogDirectory" >&2
-echo "    bundle exec jekyll serve --livereload --open-url" >&2
+echo "    cd $blogDirectory && bundle exec jekyll serve --livereload --open-url" >&2
