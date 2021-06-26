@@ -9,4 +9,6 @@ blogDirectory="$programDirectory/blog"
 # does not have a valid date in the YAML front matter.
 # ERROR: YOUR SITE COULD NOT BE BUILT:
 # ]]
-alias start-server="cd '$blogDirectory' && bundle exec jekyll serve --livereload --open-url"
+alias jekyll="cd '$blogDirectory' && bundle exec jekyll"
+alias serve="start-server"
+alias start-server="jekyll serve --livereload --open-url"
