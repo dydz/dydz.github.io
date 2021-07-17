@@ -13,3 +13,5 @@ jobs:
       # Check out the repository under $GITHUB_WORKSPACE.
       - uses: actions/checkout@v2
       - uses: helaili/jekyll-action@2.2.0
+        with:
+          token: ${{ secrets.BLOG_GITHUB_TOKEN }}
