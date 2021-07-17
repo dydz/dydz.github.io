@@ -9,13 +9,13 @@ A script can both document the steps and provide a way for the computer to run t
 
 One strategy I've found is to iteratively develop the script over a few runs of the same steps. I'll start out with a script that is mostly comments or just a URL reference to the steps. Then flush it out making many hardcoded assumptions. Then I'll parameterize it and flush it out more. Each time I work on the script I'll devote only as much time as I'm willing to: 5 minutes, 10 minutes, 30 minutes, and then move on with my day. Eventually I have a script.
 
-This is a strategy I've used to write the <a href="https://github.com/dydz/dydz.github.io/blob/main/configure-machine-for-blogging" target="_blank" rel="noreferrer noopener">script to configure my machine for blogging</a>. 
+This is the strategy I used to write the <a href="https://github.com/dydz/dydz.github.io/blob/main/configure-machine-for-blogging" target="_blank" rel="noreferrer noopener">script to configure my machine for blogging</a>.
 
 ## Example
 
 To make this post more concrete, I'll walk through creating a part of my <a href="https://github.com/dydz/dydz.github.io/blob/main/configure-machine-for-blogging" target="_blank" rel="noreferrer noopener">configure-machine-for-blogging</a> script from scratch.
 
-First I open my browser to <https://jekyllrb.com/docs/installation/macos>.
+First I open my browser to <a href="https://jekyllrb.com/docs/installation/macos" target="_blank" rel="noreferrer noopener">https://jekyllrb.com/docs/installation/macos</a>.
 
 <img src="/assets/images/jekyll-install-command-line-tools.png" alt="Jekyll's first step: Install command line tools by running xcode-select --install" width="567" height="423" srcset="/assets/images/jekyll-install-command-line-tools.png 1x, /assets/images/jekyll-install-command-line-tools@2x.png 2x">
 
@@ -58,7 +58,7 @@ Continuing, I skip some sections that don't apply to my machine and get to the <
 
 <img src="/assets/images/jekyll-install-jekyll.png" alt="Jekyll's third step: Install Jekyll" width="561" height="574" srcset="/assets/images/jekyll-install-jekyll.png 1x, /assets/images/jekyll-install-jekyll@2x.png 2x">
 
-It tells me to install jekyll. Then get my Ruby version to build the PATH to export, but it only uses the major and minor version numbers. I chose to compute that version string and after reading the Ruby API docs came up with a Ruby script and encoded that into my shell script:
+It tells me to install Jekyll. Then get my Ruby version to build the PATH to export, but it only uses the major and minor version numbers. I chose to compute that version string and after reading the Ruby API docs came up with a Ruby script and encoded that into my shell script:
 
 ```bash
 #!/bin/sh
@@ -114,5 +114,5 @@ fi
 
 And that's it for this example. The script evolved from this: I encoded more steps, enabled some diagnostics, and ran it through <a href="https://www.shellcheck.net" target="_blank" rel="noreferrer noopener">ShellCheck</a>. The full script is at:
 
-<https://github.com/dydz/dydz.github.io/blob/main/configure-machine-for-blogging>
+<a href="https://github.com/dydz/dydz.github.io/blob/main/configure-machine-for-blogging" target="_blank" rel="noreferrer noopener">https://github.com/dydz/dydz.github.io/blob/main/configure-machine-for-blogging</a>
 
