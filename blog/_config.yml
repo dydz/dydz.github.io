@@ -5,7 +5,7 @@ description: >-
 
 domain: "www.dabates.com"
 url: "https://www.dabates.com"
-baseurl: ""
+baseurl: "/blog"
 
 twitter_username: _dydz
 github_username:  dydz
