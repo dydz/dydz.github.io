@@ -1,0 +1,23 @@
+title: Daniel Bates
+description: >-
+  My name is Daniel Bates. Since I was a child I have been fascinated with computers.
+  Despite an early start, I realize now just how little I know about them.
+
+domain: "www.dabates.com"
+url: "https://www.dabates.com"
+baseurl: ""
+
+twitter_username: _dydz
+github_username:  dydz
+linkedin_username: daniel-bates-43a2111b
+rss: RSS
+
+theme: minima
+plugins:
+  - jekyll-feed
+
+defaults:
+  - scope:
+      path: "assets/images"
+    values:
+      image: true

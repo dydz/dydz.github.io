@@ -1,0 +1,11 @@
+# After updating a gem's version or adding a new gem, run:
+#     bundle install
+# To update a single gem, like github-pages, run:
+#     bundle update github-pages
+source "https://rubygems.org"
+gem "minima", "~> 2.5"
+gem "github-pages", "~> 215", group: :jekyll_plugins
+group :jekyll_plugins do
+  gem "jekyll-compose", "~> 0.12"
+  gem "jekyll-feed", "~> 0.12"
+end
