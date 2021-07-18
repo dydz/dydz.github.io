@@ -52,7 +52,7 @@ fi
 export SDKROOT=$(xcrun --show-sdk-path)
 ```
 
-By the way, I redirect my "echo" output to standard error (`>&2`) since such a message reads like an error. This also future proofs the script for use in a <a href="https://en.wikipedia.org/wiki/Pipeline_(Unix" target="_blank" rel="noreferrer noopener">pipeline</a>).
+By the way, I redirect my "echo" output to standard error (`>&2`) since such a message reads like an error. This also future proofs the script for use in a <a href="https://en.wikipedia.org/wiki/Pipeline_(Unix" target="_blank" rel="noreferrer noopener">pipeline</a>.
 
 Continuing, I skip some sections that don't apply to my machine and get to the <a href="https://jekyllrb.com/docs/installation/macos/#install-jekyll" target="_blank" rel="noreferrer noopener">Install Jekyl</a> section:
 
