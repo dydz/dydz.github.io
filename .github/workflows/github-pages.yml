@@ -10,10 +10,20 @@ jobs:
   github-pages:
     runs-on: ubuntu-latest
     steps:
-      # Check out the repository under $GITHUB_WORKSPACE.
-      - uses: actions/checkout@v2
-      - uses: helaili/jekyll-action@2.2.0
+      # Checks out the repository under $GITHUB_WORKSPACE.
+      - name: Checkout source
+        uses: actions/checkout@v2
+      - name: Build and publish site
+        uses: helaili/jekyll-action@2.2.0
         with:
           jekyll_src: "./blog"
           target_branch: "gh-pages"
+          token: ${{ secrets.GITHUB_TOKEN }}
+      # FIXME: The CNAME file should be committed atomically with the blog to avoid a service interuption.
+      - name: Commit CNAME file
+        uses: actions-x/commit@v2
+        with:
+          message: "Add CNAME file"
+          branch: "gh-pages"
+          files: "./CNAME"
           token: ${{ secrets.GITHUB_TOKEN }}
