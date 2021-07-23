@@ -39,7 +39,7 @@ This results in one or more SLC commits. Nobody knows how many times I had to fi
 
 # Rebase or merge?
 
-Now that 1 patch is 1 commit we can get to the primary motivation for this note. What is the best merge strategy?
+Now that 1 patch is 1 commit we can get to the primary motivation for this post. What is the best merge strategy?
 
 Rebase locally then optionally merge.
 
