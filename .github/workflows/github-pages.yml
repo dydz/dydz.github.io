@@ -16,9 +16,23 @@ jobs:
       - name: Copy CNAME file to ./blog
         run: cp -np CNAME ./blog
         shell: bash
+      - name: Save previous sitemap file
+        run: "[ -f sitemap.xml ] && cp -np sitemap.xml /tmp/previous-sitemap.xml"
+        shell: bash
+        working-directory: blog
       - name: Build and publish site
         uses: helaili/jekyll-action@2.2.0
         with:
           jekyll_src: "./blog"
           target_branch: "gh-pages"
           token: ${{ secrets.GITHUB_TOKEN }}
+        # See <https://developers.google.com/search/docs/advanced/sitemaps/build-sitemap>.
+      - name: Notify Google of sitemap changes
+        run: "( [ ! -f /tmp/previous-sitemap.xml ] || ! diff -q /tmp/previous-sitemap.xml sitemap.xml > /dev/null ) && curl -sS --retry 5 --retry-delay 0 'https://www.google.com/ping?sitemap=https://$(cat CNAME)/sitemap.xml' > /dev/null"
+        shell: bash
+        working-directory: blog
+        # See <https://www.bing.com/webmasters/help/sitemaps-3b5cf6ed>.
+      - name: Notify Bing of sitemap changes
+        run: "( [ ! -f /tmp/previous-sitemap.xml ] || ! diff -q /tmp/previous-sitemap.xml sitemap.xml > /dev/null ) && curl -sS --retry 5 --retry-delay 0 'https://www.bing.com/ping?sitemap=https://$(cat CNAME)/sitemap.xml' > /dev/null"
+        shell: bash
+        working-directory: blog
