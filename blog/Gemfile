@@ -8,5 +8,4 @@ gem "github-pages", "~> 215", group: :jekyll_plugins
 group :jekyll_plugins do
   gem "jekyll-compose", "~> 0.12"
   gem "jekyll-feed", "~> 0.12"
-  gem "jekyll-sitemap", "~> 1.4.0"
 end
