@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# Exit immediately if a command (individually or part of a pipeline) exits with a non-zero exit status.
+# FIXME: -o pipefail isn't available in POSIX shell.
+set -eo pipefail
+# Enable diagnostics when expanding unset variables.
+set -u
+
+programName=$(basename "$0")
+programDirectory=$(dirname "$0")
+
+basePingURLs=(
+    "https://www.google.com/ping?sitemap=" # See <https://www.google.com/webmasters/tools/>.
+    "https://www.bing.com/ping?sitemap=" # See <https://www.bing.com/webmaster>.
+)
+
+if [[ "$#" = 1 && ( $1 = "-h" || $1 = "--help" ) ]]; then
+    echo "Usage: $programName [OLD_SITEMAP]" >&2
+    exit 1
+fi
+
+cnamePath="$programDirectory/../../CNAME"
+if [ ! -f "$cnamePath" ]; then
+    echo "Could not find $cnamePath." >&2
+    exit 1;
+fi
+
+if [ "$#" -gt 0 ]; then
+    oldSitemap=$1
+else
+    oldSitemap=""
+fi
+
+newSitemap="$programDirectory/../../sitemap.xml"
+if [ ! -f "$newSitemap" ]; then
+    echo "Couldn't find sitemap $newSitemap. Was this script run from the gh-pages branch?" >&2
+   # exit 1;
+fi
+
+shouldSendSitemap=false
+if [ -z "$oldSitemap" ]; then
+    shouldSendSitemap=true
+elif [ -f "$oldSitemap" ]; then
+    if ! diff -q "$oldSitemap" "$newSitemap" > /dev/null; then
+        shouldSendSitemap=true
+    fi
+fi
+
+if [ "$shouldSendSitemap" = false ]; then
+    echo "Nothing to do."
+    exit 0
+fi
+
+cname="$(<"$cnamePath")"
+sitemapFilename="$(basename "$newSitemap")"
+sitemapURL="https://$cname/$sitemapFilename"
+
+for basePingURL in "${basePingURLs[@]}"; do
+    echo "Notifying $basePingURL"
+    echo "[["
+    curl -sS --retry 5 --retry-delay 0 "$basePingURL$sitemapURL"
+    echo "]]"
+    echo ""
+done
