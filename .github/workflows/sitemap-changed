@@ -16,6 +16,9 @@ basePingURLs=(
 
 if [[ "$#" = 1 && ( $1 = "-h" || $1 = "--help" ) ]]; then
     echo "Usage: $programName [OLD_SITEMAP]" >&2
+    echo ""
+    echo "This script first looks for sitemap.xml in \$GITHUB_WORKSPACE/../jekyll_build." >&2
+    echo "If not found then it looks for it in $programDirectory/../../." >&2
     exit 1
 fi
 
@@ -31,10 +34,13 @@ else
     oldSitemap=""
 fi
 
-newSitemap="$programDirectory/../../sitemap.xml"
+newSitemap="${GITHUB_WORKSPACE}/../jekyll_build/sitemap.xml"
+if [ ! -f "$newSitemap" ]; then
+    newSitemap="$programDirectory/../../sitemap.xml"
+fi
 if [ ! -f "$newSitemap" ]; then
     echo "Couldn't find sitemap $newSitemap. Was this script run from the gh-pages branch?" >&2
-   # exit 1;
+    exit 1;
 fi
 
 shouldSendSitemap=false
