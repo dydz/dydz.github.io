@@ -16,15 +16,9 @@ jobs:
       - name: Copy CNAME file to ./blog
         run: cp -np CNAME ./blog
         shell: bash
-      - name: Save previous sitemap file
-        run: "[ -f ./blog/_site/sitemap.xml ] && cp -np ./blog/_site/sitemap.xml /tmp/previous-sitemap.xml || exit 0"
-        shell: bash
       - name: Build and publish site
         uses: helaili/jekyll-action@2.2.0
         with:
           jekyll_src: "./blog"
           target_branch: "gh-pages"
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Sitemap changed
-        run: "[ -f /tmp/previous-sitemap.xml ] && ./.github/workflows/sitemap-changed /tmp/previous-sitemap.xml || ./.github/workflows/sitemap-changed"
-        shell: bash
