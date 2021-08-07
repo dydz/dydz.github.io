@@ -26,5 +26,5 @@ jobs:
           target_branch: "gh-pages"
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Sitemap changed
-        run: "[ -f /tmp/previous-sitemap.xml ] && ${{ github.action_path }}/sitemap-changed /tmp/previous-sitemap.xml || ${{ github.action_path }}/sitemap-changed"
+        run: "[ -f /tmp/previous-sitemap.xml ] && ./.github/workflows/sitemap-changed /tmp/previous-sitemap.xml || ./.github/workflows/sitemap-changed"
         shell: bash
