@@ -38,8 +38,16 @@ fi
 env
 echo ""
 pwd
-echo ""
-ls -l .
+echo "== current directory =="
+ls -la .
+echo "== /github =="
+ls -la /github
+echo "== /github/jekyll_build =="
+ls -la /github/jekyll_build
+echo "== /github/workspace =="
+ls -la /github/workspace
+echo "== /home/runner/work/_temp/_github_home =="
+ls -la /home/runner/work/_temp/_github_home
 
 if [ -n "${GITHUB_WORKSPACE:-}" ]; then
     newSitemap="${GITHUB_WORKSPACE}/../jekyll_build/sitemap.xml"
