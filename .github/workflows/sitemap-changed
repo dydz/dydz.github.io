@@ -34,8 +34,16 @@ else
     oldSitemap=""
 fi
 
-newSitemap="${GITHUB_WORKSPACE}/../jekyll_build/sitemap.xml"
-if [ ! -f "$newSitemap" ]; then
+# FIXME: Remove after done debugging.
+env
+echo ""
+pwd
+echo ""
+ls -l .
+
+if [ -n "${GITHUB_WORKSPACE:-}" ]; then
+    newSitemap="${GITHUB_WORKSPACE}/../jekyll_build/sitemap.xml"
+else
     newSitemap="$programDirectory/../../sitemap.xml"
 fi
 if [ ! -f "$newSitemap" ]; then
