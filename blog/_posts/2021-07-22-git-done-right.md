@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Git Done Right
+description: "My workflow for breaking apart work into logical commits so that 1 patch is equal to 1 commit. Always rebase and optionally git merge. Don't just git merge."
 date: 2021-07-22 23:39 -0700
 ---
 # What's this about?

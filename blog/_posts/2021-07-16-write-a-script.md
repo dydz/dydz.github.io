@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Document your steps through scripts
+description: "Consider writing a script instead of documenting steps. A script both documents steps and provides a way for the computer to run them for you. Let's write one!"
 date: 2021-07-16 22:02 -0700
 ---
 Step 1. Step 2. Step 3...and then sometimes you're done...setting up your workstation, pulling some data from your phone, or trying to bring up a <a href="https://jekyllrb.com/docs/installation/macos/" target="_blank" rel="noreferrer noopener">blog</a>. Sometimes not, sometimes there are more steps. Why not write a script instead?

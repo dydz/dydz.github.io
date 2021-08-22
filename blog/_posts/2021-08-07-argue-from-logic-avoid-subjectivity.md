@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Argue from a position of logic; avoid subjectivity
+description: "The most important thing to consider is the customer impact of doing something. Ensure there are at least two solutions to a problem and argue logically."
 date: 2021-08-07 14:27 -0700
 ---
 The most important thing to consider is the customer impact of doing something. The goal should be to always improve the customer experience with each change or, if that is a herculean effort at the moment, make it suck less. (Note that who the customer is will vary depending on the application. It doesn't just refer to the people that have paid for some product or service. The customer could be yourself.).
