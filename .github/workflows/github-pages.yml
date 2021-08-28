@@ -16,8 +16,13 @@ jobs:
       - name: Copy CNAME file to ./blog
         run: cp -np CNAME ./blog
         shell: bash
+      - name: Checkout gh-pages source
+        uses: actions/checkout@v2
+        with:
+          ref: "gh-pages"
+          path: "BuiltGitHubPages"
       - name: Save previous sitemap file
-        run: "[ -f ./blog/_site/sitemap.xml ] && cp -np ./blog/_site/sitemap.xml /tmp/previous-sitemap.xml || exit 0"
+        run: "[ -f ./BuiltGitHubPages/sitemap.xml ] && cp -np ./BuiltGitHubPages/sitemap.xml /tmp/previous-sitemap.xml || exit 0"
         shell: bash
       - name: Build and publish site
         uses: helaili/jekyll-action@2.2.0
@@ -25,7 +30,7 @@ jobs:
           jekyll_src: "./blog"
           target_branch: "gh-pages"
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Checkout gh-pages source
+      - name: Update gh-pages source
         uses: actions/checkout@v2
         with:
           ref: "gh-pages"
