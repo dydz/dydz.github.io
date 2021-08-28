@@ -33,7 +33,7 @@ else
     oldSitemap=""
 fi
 
-newSitemap="$programDirectory/../../sitemap.xml"
+newSitemap="$programDirectory/../../BuiltGitHubPages/sitemap.xml"
 if [ ! -f "$newSitemap" ]; then
     echo "Couldn't find sitemap $newSitemap. Was this script run from the gh-pages branch?" >&2
     exit 1;
