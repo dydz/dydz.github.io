@@ -30,4 +30,4 @@ Here are some more things I think about as I am writing code:
 3. Is this expression easy to understand or should I give it a name? For example, `x % 2 == 0` vs `bool isEven = x % 2 == 0;`?
 4. Would this be easier to understand if I avoided reusing a variable?
 
-[^1]: Although this seems counterintuitive, the primary motivation of this step is not to produce an efficient algorithm so much as it's to identify the absolute minimum parts that must be kept to ensure a correct solution. I stop as soon as these parts become apparent me.
+[^1]: Although this seems counterintuitive, the primary motivation of this step is not to produce an efficient algorithm so much as it's to identify the absolute minimum parts that must be kept to ensure a correct solution. I stop as soon as these parts become apparent to me.
