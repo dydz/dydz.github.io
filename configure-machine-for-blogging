@@ -30,7 +30,14 @@ hasDirectoryInPathEnvironmentVariable()
 
 # Ensure Ruby and other developer command line tools are installed.
 echo "Running xcode-select --install..." >&2
+
+# Will spawn /System/Library/CoreServices/Install Command Line Developer Tools.app/Contents/MacOS/Install Command Line Developer Tools
 xcode-select --install >/dev/null 2>&1 || true
+toolsInstallerPID=$(pgrep 'Install Command Line Developer Tools') || true
+if [ -n "$toolsInstallerPID" ]; then
+    # Assume that when the installer exits that installation was successfull.
+    lsof -p "$toolsInstallerPID" +r 1 >/dev/null 2>&1
+fi
 
 if ! which ruby >/dev/null 2>&1; then
     echo "Couldn't find ruby. Is it installed?" >&2
