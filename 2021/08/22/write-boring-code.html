@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Write boring code | Daniel Bates</title>
+<meta name="generator" content="Jekyll v3.9.0" />
+<meta property="og:title" content="Write boring code" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Code should be simple to help make it easier to read and more obvious when a bug is introduced. Here’s a technique I use to come up with boring code." />
+<meta property="og:description" content="Code should be simple to help make it easier to read and more obvious when a bug is introduced. Here’s a technique I use to come up with boring code." />
+<link rel="canonical" href="https://dabates.com/2021/08/22/write-boring-code.html" />
+<meta property="og:url" content="https://dabates.com/2021/08/22/write-boring-code.html" />
+<meta property="og:site_name" content="Daniel Bates" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-08-22T05:46:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Write boring code" />
+<script type="application/ld+json">
+{"headline":"Write boring code","dateModified":"2021-08-22T05:46:00+00:00","datePublished":"2021-08-22T05:46:00+00:00","description":"Code should be simple to help make it easier to read and more obvious when a bug is introduced. Here’s a technique I use to come up with boring code.","url":"https://dabates.com/2021/08/22/write-boring-code.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://dabates.com/2021/08/22/write-boring-code.html"},"@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://dabates.com/feed.xml" title="Daniel Bates" /><meta http-equiv="Content-Security-Policy" content="default-src 'self'">
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Daniel Bates</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+<div class="wrapper">
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Write boring code</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2021-08-22T05:46:00+00:00" itemprop="datePublished">
+        Aug 22, 2021
+      </time>• <span>Revised</span>
+          <time datetime="2021-08-22T05:46:00+00:00" itemprop="dateRevised">
+            Aug 27, 2021
+          </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Code should be simple to help make it easier to read and more obvious when a bug is introduced.</p>
+
+<blockquote>
+  <p><a href="https://youtu.be/QhhFQ-3w5tE?t=1496" target="_blank" rel="noreferrer noopener" title="Link to Steve's direct quote">The least expensive, most bug-free line of code is the one you didn’t have to write.</a> – <a href="https://www.informit.com/articles/article.aspx?p=1353402" target="_blank" rel="noreferrer noopener">Steve Jobs as quoted by Eric Buck</a></p>
+</blockquote>
+
+<p>It’s also entirely possible, though may be hard to achieve, to write code that is easy to read and maintain with few comments. Both can be achieved by using simple algorithms and data structures, picking the right data types for plain old data, the right control flow directives (<code class="language-plaintext highlighter-rouge">if</code> vs <code class="language-plaintext highlighter-rouge">while</code> vs <code class="language-plaintext highlighter-rouge">do while</code>, etc.), and choosing good names for things. When a more complicated solution is needed for performance (identified by measurement) or other business purposes then it should be bottled up behind an interface that is simple to use correctly and hard to use incorrectly.</p>
+
+<h2 id="work-forwards-and-backwards">Work forwards and backwards</h2>
+
+<p>One technique I use to come up with a simple solution is to work forwards and backwards: forwards to the most efficient solution and then backwards to the most readable. First solve the problem for correctness using whatever approach comes to mind. Then, only devoting as much time as I’m willing to, I iteratively reduce the solution to the fewest machine instructions and smallest memory footprint<sup id="fnref:1" role="doc-noteref"><a href="#fn:1" class="footnote" rel="footnote">1</a></sup>. The result is a solution that tends to be very clever, but would require comments. So, I selectively un-reduce (aka deoptimize); I work backwards, replacing low level primitives (e.g. <code class="language-plaintext highlighter-rouge">for (unsigned i = 0; i &lt; size; ++i) { if (items[i] == ...) { ... } }</code>) with higher level ones (e.g. <code class="language-plaintext highlighter-rouge">items.contains(item)</code>) until the solution needs few or no comments.</p>
+
+<p>Be practical when doing the reduction: if the code can’t be reduced without becoming harder to read and understand then reduce the code to the fewest source level lines that are still understandable and easy to read. For example, logically you may be able to reduce the binary- and runtime- size of some code that uses a hash table by using a plain array of (key, value) objects and then iterate over them all to find something without a measurable perf. difference, but using a hash table to map keys to values may make the code easier to read.</p>
+
+<p>How do you know when to stop? When you’re bored reading the code and want to move on.</p>
+
+<p>(Pro tip: Write some tests after first solving the problem for correctness. Then use those tests to sanity check the re-write towards boring).</p>
+
+<h2 id="additional-thoughts">Additional thoughts</h2>
+
+<p>Here are some more things I think about as I am writing code:</p>
+
+<ol>
+  <li>Can I make use of some existing function or data structure to avoid having to write more code?</li>
+  <li>Can I <code class="language-plaintext highlighter-rouge">assert()</code> my invariants to avoid having to write more code?</li>
+  <li>Is this expression easy to understand or should I give it a name? For example, <code class="language-plaintext highlighter-rouge">x % 2 == 0</code> vs <code class="language-plaintext highlighter-rouge">bool isEven = x % 2 == 0;</code>?</li>
+  <li>Would this be easier to understand if I avoided reusing a variable?</li>
+</ol>
+
+<div class="footnotes" role="doc-endnotes">
+  <ol>
+    <li id="fn:1" role="doc-endnote">
+      <p>Although this seems counterintuitive, the primary motivation of this step is not to produce an efficient algorithm so much as it’s to identify the absolute minimum parts that must be kept to ensure a correct solution. I stop as soon as these parts become apparent to me. <a href="#fnref:1" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+
+  </div><a class="u-url" href="/2021/08/22/write-boring-code.html" hidden></a>
+</article>
+
+</div>
+</main><footer class="site-footer h-card">
+<div class="wrapper"><ul class="social-media-list"><li><a href="https://github.com/dydz"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">dydz</span></a></li><li><a href="https://www.linkedin.com/in/daniel-bates-43a2111b"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#linkedin"></use></svg> <span class="username">daniel-bates-43a2111b</span></a></li><li><a href="https://www.twitter.com/_dydz"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">_dydz</span></a></li><li><a href="/feed.xml"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#rss"></use></svg> <span>RSS</span></a></li><li><a href="mailto:dydz%40intudata.com"><span class="username">dydz@intudata.com</span></a></li></ul>
+</div>
+</footer>
+</body>
+</html>

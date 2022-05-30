@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>How to create an Xcode alternative toolchain to load a custom Clang plugin | Daniel Bates</title>
+<meta name="generator" content="Jekyll v3.9.0" />
+<meta property="og:title" content="How to create an Xcode alternative toolchain to load a custom Clang plugin" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="What is an alternative toolchain?" />
+<meta property="og:description" content="What is an alternative toolchain?" />
+<link rel="canonical" href="https://dabates.com/2022/05/30/xcode-alternative-toolchain.html" />
+<meta property="og:url" content="https://dabates.com/2022/05/30/xcode-alternative-toolchain.html" />
+<meta property="og:site_name" content="Daniel Bates" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-05-30T22:09:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="How to create an Xcode alternative toolchain to load a custom Clang plugin" />
+<script type="application/ld+json">
+{"headline":"How to create an Xcode alternative toolchain to load a custom Clang plugin","dateModified":"2022-05-30T22:09:00+00:00","datePublished":"2022-05-30T22:09:00+00:00","description":"What is an alternative toolchain?","url":"https://dabates.com/2022/05/30/xcode-alternative-toolchain.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://dabates.com/2022/05/30/xcode-alternative-toolchain.html"},"@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://dabates.com/feed.xml" title="Daniel Bates" /><meta http-equiv="Content-Security-Policy" content="default-src 'self'">
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Daniel Bates</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+<div class="wrapper">
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">How to create an Xcode alternative toolchain to load a custom Clang plugin</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2022-05-30T22:09:00+00:00" itemprop="datePublished">
+        May 30, 2022
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1 id="what-is-an-alternative-toolchain">What is an alternative toolchain?</h1>
+
+<p>An alternative toolchain is a way to package up a compiler, linker, headers, settings, etc. into a single directory. If this directory is placed under one of the following special directories:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">~/Library/Developer/Toolchains</code></li>
+  <li><code class="language-plaintext highlighter-rouge">/Library/Developer/Toolchains</code></li>
+</ul>
+
+<p>(Note that these directories are not part of the standard distribution and will need to be created)</p>
+
+<p>then it will appear in Xcode:</p>
+
+<p><img src="/assets/images/xcode-dev-clang-toolchain-menu-background.jpg" alt="Using the Xcode Toolchain menu to switch to my custom dev toolchain." width="516" height="377" srcset="/assets/images/xcode-dev-clang-toolchain-menu-background.jpg 1x, /assets/images/xcode-dev-clang-toolchain-menu-background@2x.jpg 2x" /></p>
+
+<h1 id="why-use-an-alternative-toolchain">Why use an alternative toolchain?</h1>
+
+<p>If you would like a convenient way in Xcode to switch between the standard toolchain and a custom Clang build with a <a href="https://clang.llvm.org/docs/ClangPlugins.html" target="_blank" rel="noreferrer noopener">custom plugin</a>.</p>
+
+<h1 id="how-do-you-create-one">How do you create one?</h1>
+
+<ol>
+  <li>
+    <p>Build LLVM as an Xcode toolchain and symlink it into one of the special directories (e.g. <code class="language-plaintext highlighter-rouge">~/Library/Developer/Toolchains</code>).</p>
+
+    <p>Here’s how I checked out and built LLVM after installing <a href="https://cmake.org/download/" target="_blank" rel="noreferrer noopener">CMake</a> and <a href="https://github.com/ninja-build/ninja/releases" target="_blank" rel="noreferrer noopener">Ninja</a>:</p>
+
+    <div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>% <span class="nb">cd</span> ~/Source 
+% git clone https://github.com/llvm/llvm-project.git
+% <span class="nb">cd </span>llvm-project
+% ./lldb/scripts/macos-setup-codesign.sh
+% <span class="nv">CC</span><span class="o">=</span>clang <span class="nv">CXX</span><span class="o">=</span>clang++ <span class="se">\</span>
+cmake <span class="nt">-S</span> llvm <span class="nt">-B</span> <span class="s2">"Build"</span> <span class="nt">-G</span> Ninja <span class="se">\</span>
+    <span class="nt">-DCMAKE_INSTALL_PREFIX</span><span class="o">=</span><span class="s2">"</span><span class="nv">$HOME</span><span class="s2">/LLVMInstall"</span> <span class="se">\</span>
+    <span class="nt">-DLLVM_CREATE_XCODE_TOOLCHAIN</span><span class="o">=</span><span class="s2">"On"</span> <span class="se">\</span>
+    <span class="nt">-DCMAKE_BUILD_TYPE</span><span class="o">=</span><span class="s2">"Release"</span> <span class="se">\</span>
+    <span class="nt">-DLLDB_EXPORT_ALL_SYMBOLS</span><span class="o">=</span><span class="s2">"1"</span> <span class="se">\</span>
+    <span class="nt">-DLLVM_ENABLE_RUNTIMES</span><span class="o">=</span><span class="s2">"libcxx;libcxxabi;libunwind"</span> <span class="se">\</span>
+    <span class="nt">-DLLVM_TARGETS_TO_BUILD</span><span class="o">=</span><span class="s2">"X86"</span> <span class="se">\</span>
+    <span class="nt">-DLLVM_ENABLE_PROJECTS</span><span class="o">=</span><span class="s2">"clang;clang-tools-extra;compiler-rt;flang;libclc;lld;lldb;openmp;polly'
+</span></code></pre></div>    </div>
+    <p>This checks out LLVM into <code class="language-plaintext highlighter-rouge">~/Source/llvm-project</code> and builds LLVM, Clang, lldb and few other projects. The built products will be placed in <code class="language-plaintext highlighter-rouge">~/Source/llvm-project/Build</code> and then installed under <code class="language-plaintext highlighter-rouge">~/LLVMInstall</code>.</p>
+  </li>
+  <li>
+    <p>Amend the built toolchain’s <code class="language-plaintext highlighter-rouge">Info.plist</code> to add a <code class="language-plaintext highlighter-rouge">OverrideBuildSettings</code><sup id="fnref:1" role="doc-noteref"><a href="#fn:1" class="footnote" rel="footnote">1</a></sup> dictionary that tells Xcode to load your custom plugin + some fixups:</p>
+
+    <div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;plist</span> <span class="na">version=</span><span class="s">"1.0"</span><span class="nt">&gt;</span>
+<span class="nt">&lt;dict&gt;</span>
+    ...
+    <span class="nt">&lt;key&gt;</span>OverrideBuildSettings<span class="nt">&lt;/key&gt;</span>
+    <span class="nt">&lt;dict&gt;</span>
+        <span class="nt">&lt;key&gt;</span>CLANG_TOOLCHAIN_FLAGS<span class="nt">&lt;/key&gt;</span>
+        <span class="nt">&lt;string&gt;</span>-Xclang -load -Xclang /path/to/custom/plugin.dylib -Xclang -add-plugin -Xclang PluginNameAsEncodedInPluginDylib<span class="nt">&lt;/string&gt;</span>
+        <span class="nt">&lt;key&gt;</span>COMPILER_INDEX_STORE_ENABLE<span class="nt">&lt;/key&gt;</span>
+        <span class="nt">&lt;string&gt;</span>NO<span class="nt">&lt;/string&gt;</span>
+        <span class="nt">&lt;key&gt;</span>OTHER_CPLUSPLUSFLAGS<span class="nt">&lt;/key&gt;</span>
+        <span class="nt">&lt;string&gt;</span>$(inherit) -isystem $(SDKROOT)/usr/include/c++/v1<span class="nt">&lt;/string&gt;</span>
+    <span class="nt">&lt;/dict&gt;</span>
+<span class="nt">&lt;/dict&gt;</span>
+<span class="nt">&lt;/plist&gt;</span>
+   
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Done.</p>
+  </li>
+</ol>
+
+<p>The fixups: setting <code class="language-plaintext highlighter-rouge">COMPILER_INDEX_STORE_ENABLE</code> to <code class="language-plaintext highlighter-rouge">NO</code> and amending <code class="language-plaintext highlighter-rouge">OTHER_CPLUSPLUSFLAGS</code> to adding <code class="language-plaintext highlighter-rouge">$(SDKROOT)/usr/include/c++/v1</code> to the system header search path are needed to avoid build failures. The latter is needed when using the toolchain to compile C++ code due to the fact that an alternative toolchain doesn’t include the same set of C++ headers as those included in the official Apple SDK and thus you would see errors like:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>fatal error: <span class="s1">'vector'</span> file not found
+</code></pre></div></div>
+
+<p>The former is needed because Xcode would otherwise try to invoke clang with a command line option that isn’t compiled in with a default LLVM build to tell it to build an index and you would see this error:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>clang-14: error: unknown argument: <span class="s1">'-index-store-path'</span>
+clang-14: error: cannot specify <span class="nt">-o</span> when generating multiple output files
+</code></pre></div></div>
+
+<h1 id="footnotes">Footnotes</h1>
+
+<div class="footnotes" role="doc-endnotes">
+  <ol>
+    <li id="fn:1" role="doc-endnote">
+      <p>Mentioned in <a href="https://github.com/apple/swift/blob/main/utils/build-script-impl" target="_blank" rel="noreferrer noopener">https://github.com/apple/swift/blob/main/utils/build-script-impl</a> <a href="#fnref:1" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+
+  </div><a class="u-url" href="/2022/05/30/xcode-alternative-toolchain.html" hidden></a>
+</article>
+
+</div>
+</main><footer class="site-footer h-card">
+<div class="wrapper"><ul class="social-media-list"><li><a href="https://github.com/dydz"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">dydz</span></a></li><li><a href="https://www.linkedin.com/in/daniel-bates-43a2111b"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#linkedin"></use></svg> <span class="username">daniel-bates-43a2111b</span></a></li><li><a href="https://www.twitter.com/_dydz"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">_dydz</span></a></li><li><a href="/feed.xml"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#rss"></use></svg> <span>RSS</span></a></li><li><a href="mailto:dydz%40intudata.com"><span class="username">dydz@intudata.com</span></a></li></ul>
+</div>
+</footer>
+</body>
+</html>

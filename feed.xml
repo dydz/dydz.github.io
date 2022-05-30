@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="https://dabates.com/feed.xml" rel="self" type="application/atom+xml" /><link href="https://dabates.com/" rel="alternate" type="text/html" /><updated>2022-05-30T22:41:38+00:00</updated><id>https://dabates.com/feed.xml</id><title type="html">Daniel Bates</title><subtitle>My name is Daniel Bates. Since I was a child I have been fascinated by computers. Despite an early start, I realize now just how little I know about them.</subtitle><entry><title type="html">How to create an Xcode alternative toolchain to load a custom Clang plugin</title><link href="https://dabates.com/2022/05/30/xcode-alternative-toolchain.html" rel="alternate" type="text/html" title="How to create an Xcode alternative toolchain to load a custom Clang plugin" /><published>2022-05-30T22:09:00+00:00</published><updated>2022-05-30T22:09:00+00:00</updated><id>https://dabates.com/2022/05/30/xcode-alternative-toolchain</id><content type="html" xml:base="https://dabates.com/2022/05/30/xcode-alternative-toolchain.html">&lt;h1 id=&quot;what-is-an-alternative-toolchain&quot;&gt;What is an alternative toolchain?&lt;/h1&gt;
+
+&lt;p&gt;An alternative toolchain is a way to package up a compiler, linker, headers, settings, etc. into a single directory. If this directory is placed under one of the following special directories:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;~/Library/Developer/Toolchains&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/Library/Developer/Toolchains&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;(Note that these directories are not part of the standard distribution and will need to be created)&lt;/p&gt;
+
+&lt;p&gt;then it will appear in Xcode:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/xcode-dev-clang-toolchain-menu-background.jpg&quot; alt=&quot;Using the Xcode Toolchain menu to switch to my custom dev toolchain.&quot; width=&quot;516&quot; height=&quot;377&quot; srcset=&quot;/assets/images/xcode-dev-clang-toolchain-menu-background.jpg 1x, /assets/images/xcode-dev-clang-toolchain-menu-background@2x.jpg 2x&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;why-use-an-alternative-toolchain&quot;&gt;Why use an alternative toolchain?&lt;/h1&gt;
+
+&lt;p&gt;If you would like a convenient way in Xcode to switch between the standard toolchain and a custom Clang build with a &lt;a href=&quot;https://clang.llvm.org/docs/ClangPlugins.html&quot; target=&quot;_blank&quot; rel=&quot;noreferrer noopener&quot;&gt;custom plugin&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h1 id=&quot;how-do-you-create-one&quot;&gt;How do you create one?&lt;/h1&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;Build LLVM as an Xcode toolchain and symlink it into one of the special directories (e.g. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;~/Library/Developer/Toolchains&lt;/code&gt;).&lt;/p&gt;
+
+    &lt;p&gt;Here’s how I checked out and built LLVM after installing &lt;a href=&quot;https://cmake.org/download/&quot; target=&quot;_blank&quot; rel=&quot;noreferrer noopener&quot;&gt;CMake&lt;/a&gt; and &lt;a href=&quot;https://github.com/ninja-build/ninja/releases&quot; target=&quot;_blank&quot; rel=&quot;noreferrer noopener&quot;&gt;Ninja&lt;/a&gt;:&lt;/p&gt;
+
+    &lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;% &lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; ~/Source 
+% git clone https://github.com/llvm/llvm-project.git
+% &lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;llvm-project
+% ./lldb/scripts/macos-setup-codesign.sh
+% &lt;span class=&quot;nv&quot;&gt;CC&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;clang &lt;span class=&quot;nv&quot;&gt;CXX&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;clang++ &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+cmake &lt;span class=&quot;nt&quot;&gt;-S&lt;/span&gt; llvm &lt;span class=&quot;nt&quot;&gt;-B&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Build&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-G&lt;/span&gt; Ninja &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;-DCMAKE_INSTALL_PREFIX&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/LLVMInstall&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;-DLLVM_CREATE_XCODE_TOOLCHAIN&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;On&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;-DCMAKE_BUILD_TYPE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;Release&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;-DLLDB_EXPORT_ALL_SYMBOLS&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;1&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;-DLLVM_ENABLE_RUNTIMES&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;libcxx;libcxxabi;libunwind&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;-DLLVM_TARGETS_TO_BUILD&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;X86&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;-DLLVM_ENABLE_PROJECTS&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;clang;clang-tools-extra;compiler-rt;flang;libclc;lld;lldb;openmp;polly'
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+    &lt;p&gt;This checks out LLVM into &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;~/Source/llvm-project&lt;/code&gt; and builds LLVM, Clang, lldb and few other projects. The built products will be placed in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;~/Source/llvm-project/Build&lt;/code&gt; and then installed under &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;~/LLVMInstall&lt;/code&gt;.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Amend the built toolchain’s &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Info.plist&lt;/code&gt; to add a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;OverrideBuildSettings&lt;/code&gt;&lt;sup id=&quot;fnref:1&quot; role=&quot;doc-noteref&quot;&gt;&lt;a href=&quot;#fn:1&quot; class=&quot;footnote&quot; rel=&quot;footnote&quot;&gt;1&lt;/a&gt;&lt;/sup&gt; dictionary that tells Xcode to load your custom plugin + some fixups:&lt;/p&gt;
+
+    &lt;div class=&quot;language-xml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;plist&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;version=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;1.0&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;dict&amp;gt;&lt;/span&gt;
+    ...
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;key&amp;gt;&lt;/span&gt;OverrideBuildSettings&lt;span class=&quot;nt&quot;&gt;&amp;lt;/key&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;dict&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;key&amp;gt;&lt;/span&gt;CLANG_TOOLCHAIN_FLAGS&lt;span class=&quot;nt&quot;&gt;&amp;lt;/key&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;string&amp;gt;&lt;/span&gt;-Xclang -load -Xclang /path/to/custom/plugin.dylib -Xclang -add-plugin -Xclang PluginNameAsEncodedInPluginDylib&lt;span class=&quot;nt&quot;&gt;&amp;lt;/string&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;key&amp;gt;&lt;/span&gt;COMPILER_INDEX_STORE_ENABLE&lt;span class=&quot;nt&quot;&gt;&amp;lt;/key&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;string&amp;gt;&lt;/span&gt;NO&lt;span class=&quot;nt&quot;&gt;&amp;lt;/string&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;key&amp;gt;&lt;/span&gt;OTHER_CPLUSPLUSFLAGS&lt;span class=&quot;nt&quot;&gt;&amp;lt;/key&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;string&amp;gt;&lt;/span&gt;$(inherit) -isystem $(SDKROOT)/usr/include/c++/v1&lt;span class=&quot;nt&quot;&gt;&amp;lt;/string&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;/dict&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/dict&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/plist&amp;gt;&lt;/span&gt;
+   
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Done.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The fixups: setting &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;COMPILER_INDEX_STORE_ENABLE&lt;/code&gt; to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NO&lt;/code&gt; and amending &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;OTHER_CPLUSPLUSFLAGS&lt;/code&gt; to adding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$(SDKROOT)/usr/include/c++/v1&lt;/code&gt; to the system header search path are needed to avoid build failures. The latter is needed when using the toolchain to compile C++ code due to the fact that an alternative toolchain doesn’t include the same set of C++ headers as those included in the official Apple SDK and thus you would see errors like:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;fatal error: &lt;span class=&quot;s1&quot;&gt;'vector'&lt;/span&gt; file not found
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The former is needed because Xcode would otherwise try to invoke clang with a command line option that isn’t compiled in with a default LLVM build to tell it to build an index and you would see this error:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;clang-14: error: unknown argument: &lt;span class=&quot;s1&quot;&gt;'-index-store-path'&lt;/span&gt;
+clang-14: error: cannot specify &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; when generating multiple output files
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h1 id=&quot;footnotes&quot;&gt;Footnotes&lt;/h1&gt;
+
+&lt;div class=&quot;footnotes&quot; role=&quot;doc-endnotes&quot;&gt;
+  &lt;ol&gt;
+    &lt;li id=&quot;fn:1&quot; role=&quot;doc-endnote&quot;&gt;
+      &lt;p&gt;Mentioned in &lt;a href=&quot;https://github.com/apple/swift/blob/main/utils/build-script-impl&quot; target=&quot;_blank&quot; rel=&quot;noreferrer noopener&quot;&gt;https://github.com/apple/swift/blob/main/utils/build-script-impl&lt;/a&gt; &lt;a href=&quot;#fnref:1&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/div&gt;</content><author><name></name></author><summary type="html">What is an alternative toolchain?</summary></entry><entry><title type="html">Write boring code</title><link href="https://dabates.com/2021/08/22/write-boring-code.html" rel="alternate" type="text/html" title="Write boring code" /><published>2021-08-22T05:46:00+00:00</published><updated>2021-08-22T05:46:00+00:00</updated><id>https://dabates.com/2021/08/22/write-boring-code</id><content type="html" xml:base="https://dabates.com/2021/08/22/write-boring-code.html">&lt;p&gt;Code should be simple to help make it easier to read and more obvious when a bug is introduced.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;a href=&quot;https://youtu.be/QhhFQ-3w5tE?t=1496&quot; target=&quot;_blank&quot; rel=&quot;noreferrer noopener&quot; title=&quot;Link to Steve's direct quote&quot;&gt;The least expensive, most bug-free line of code is the one you didn’t have to write.&lt;/a&gt; – &lt;a href=&quot;https://www.informit.com/articles/article.aspx?p=1353402&quot; target=&quot;_blank&quot; rel=&quot;noreferrer noopener&quot;&gt;Steve Jobs as quoted by Eric Buck&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;It’s also entirely possible, though may be hard to achieve, to write code that is easy to read and maintain with few comments. Both can be achieved by using simple algorithms and data structures, picking the right data types for plain old data, the right control flow directives (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;if&lt;/code&gt; vs &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;while&lt;/code&gt; vs &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;do while&lt;/code&gt;, etc.), and choosing good names for things. When a more complicated solution is needed for performance (identified by measurement) or other business purposes then it should be bottled up behind an interface that is simple to use correctly and hard to use incorrectly.&lt;/p&gt;
+
+&lt;h2 id=&quot;work-forwards-and-backwards&quot;&gt;Work forwards and backwards&lt;/h2&gt;
+
+&lt;p&gt;One technique I use to come up with a simple solution is to work forwards and backwards: forwards to the most efficient solution and then backwards to the most readable. First solve the problem for correctness using whatever approach comes to mind. Then, only devoting as much time as I’m willing to, I iteratively reduce the solution to the fewest machine instructions and smallest memory footprint&lt;sup id=&quot;fnref:1&quot; role=&quot;doc-noteref&quot;&gt;&lt;a href=&quot;#fn:1&quot; class=&quot;footnote&quot; rel=&quot;footnote&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;. The result is a solution that tends to be very clever, but would require comments. So, I selectively un-reduce (aka deoptimize); I work backwards, replacing low level primitives (e.g. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;for (unsigned i = 0; i &amp;lt; size; ++i) { if (items[i] == ...) { ... } }&lt;/code&gt;) with higher level ones (e.g. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;items.contains(item)&lt;/code&gt;) until the solution needs few or no comments.&lt;/p&gt;
+
+&lt;p&gt;Be practical when doing the reduction: if the code can’t be reduced without becoming harder to read and understand then reduce the code to the fewest source level lines that are still understandable and easy to read. For example, logically you may be able to reduce the binary- and runtime- size of some code that uses a hash table by using a plain array of (key, value) objects and then iterate over them all to find something without a measurable perf. difference, but using a hash table to map keys to values may make the code easier to read.&lt;/p&gt;
+
+&lt;p&gt;How do you know when to stop? When you’re bored reading the code and want to move on.&lt;/p&gt;
+
+&lt;p&gt;(Pro tip: Write some tests after first solving the problem for correctness. Then use those tests to sanity check the re-write towards boring).&lt;/p&gt;
+
+&lt;h2 id=&quot;additional-thoughts&quot;&gt;Additional thoughts&lt;/h2&gt;
+
+&lt;p&gt;Here are some more things I think about as I am writing code:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Can I make use of some existing function or data structure to avoid having to write more code?&lt;/li&gt;
+  &lt;li&gt;Can I &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;assert()&lt;/code&gt; my invariants to avoid having to write more code?&lt;/li&gt;
+  &lt;li&gt;Is this expression easy to understand or should I give it a name? For example, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;x % 2 == 0&lt;/code&gt; vs &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bool isEven = x % 2 == 0;&lt;/code&gt;?&lt;/li&gt;
+  &lt;li&gt;Would this be easier to understand if I avoided reusing a variable?&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;div class=&quot;footnotes&quot; role=&quot;doc-endnotes&quot;&gt;
+  &lt;ol&gt;
+    &lt;li id=&quot;fn:1&quot; role=&quot;doc-endnote&quot;&gt;
+      &lt;p&gt;Although this seems counterintuitive, the primary motivation of this step is not to produce an efficient algorithm so much as it’s to identify the absolute minimum parts that must be kept to ensure a correct solution. I stop as soon as these parts become apparent to me. &lt;a href=&quot;#fnref:1&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/div&gt;</content><author><name></name></author><summary type="html">Code should be simple to help make it easier to read and more obvious when a bug is introduced.</summary></entry><entry><title type="html">Argue from a position of logic; avoid subjectivity</title><link href="https://dabates.com/2021/08/07/argue-from-logic-avoid-subjectivity.html" rel="alternate" type="text/html" title="Argue from a position of logic; avoid subjectivity" /><published>2021-08-07T21:27:00+00:00</published><updated>2021-08-07T21:27:00+00:00</updated><id>https://dabates.com/2021/08/07/argue-from-logic-avoid-subjectivity</id><content type="html" xml:base="https://dabates.com/2021/08/07/argue-from-logic-avoid-subjectivity.html">&lt;p&gt;The most important thing to consider is the customer impact of doing something. The goal should be to always improve the customer experience with each change or, if that is a herculean effort at the moment, make it suck less. (Note that who the customer is will vary depending on the application. It doesn’t just refer to the people that have paid for some product or service. The customer could be yourself.).&lt;/p&gt;
+
+&lt;p&gt;When applied to coding it can select for the &lt;a href=&quot;/2021/07/23/git-done-right.html&quot;&gt;small, easily reviewed, logical changes (SLCs)&lt;/a&gt; that actually improve the customer experience. When applied in technical discussion, it will bring the discussion back to the most important thought: will doing X improve the customer experience? If so, why?&lt;/p&gt;
+
+&lt;h1 id=&quot;argue-from-a-position-of-logic&quot;&gt;Argue from a position of logic&lt;/h1&gt;
+
+&lt;p&gt;Towards the principle, good debate requires that there be at least two or more solutions to the problem at hand and that these solutions have been compared against each other to produce a list of pros and cons. If the pros and cons are relatively equal then produce new pros and cons lists taking the following into account:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;what’s the likelihood the solution’s assumptions will be violated in the near future (where near is on the order of 3-6 months)?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;how simple is the implementation? how contained is it in the code base?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;could the solution make it harder to work on other features or fix bugs in other areas?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;could it make the code less understandable to a new hire?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;how hard will it be to un-implement within 3-6 months if it turns out the solution isn’t good? If not hard, how much time will it take?&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;After all this, if there are still two equally good (or bad) solutions then flip a coin because this means it doesn’t matter anymore. Career wise, coin flipping should be done once in a blue moon. If you find you are doing this more than that then either you didn’t find all the pros and cons or you may be burned out. Start over if the former. Take a small break or a vacation if the latter.&lt;/p&gt;</content><author><name></name></author><summary type="html">The most important thing to consider is the customer impact of doing something. The goal should be to always improve the customer experience with each change or, if that is a herculean effort at the moment, make it suck less. (Note that who the customer is will vary depending on the application. It doesn’t just refer to the people that have paid for some product or service. The customer could be yourself.).</summary></entry><entry><title type="html">Git Done Right</title><link href="https://dabates.com/2021/07/23/git-done-right.html" rel="alternate" type="text/html" title="Git Done Right" /><published>2021-07-23T06:39:00+00:00</published><updated>2021-07-23T06:39:00+00:00</updated><id>https://dabates.com/2021/07/23/git-done-right</id><content type="html" xml:base="https://dabates.com/2021/07/23/git-done-right.html">&lt;h1 id=&quot;whats-this-about&quot;&gt;What’s this about?&lt;/h1&gt;
+
+&lt;p&gt;This is a post about a good development workflow with Git that will ensure that 1) well-documented commits that don’t break the build or tests are made and 2) that the history of the repo is easy to bisect to find regressions or progressions.&lt;/p&gt;
+
+&lt;p&gt;How is this accomplished? By doing a successful &lt;a href=&quot;https://www.youtube.com/watch?v=0n_J2z-ILXo&quot; target=&quot;_blank&quot; rel=&quot;noreferrer noopener&quot;&gt;Humpty Dumpty&lt;/a&gt;:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Humpty Dumpty sat on a wall.&lt;br /&gt;Humpty Dumpty had a great fall.&lt;br /&gt;All the king’s horses and all the king’s men.&lt;br /&gt;
+&lt;del&gt;Couldn’t&lt;/del&gt; Put Humpty together again.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;First I’m going to show how to break up a code change. Then I’m going to show how to merge these code changes into the repo.&lt;/p&gt;
+
+&lt;h1 id=&quot;break-apart-work-into-logical-commits&quot;&gt;Break apart work into logical commits&lt;/h1&gt;
+
+&lt;p&gt;Before I can get to using Git right, the basic development workflow needs to be right. The basic unit of measure in this discussion is the patch, which I will refer interchangeably with the word commit throughout the rest of this note unless otherwise noted and I’ll explain why in a moment. To be precise a commit is its own logical unit that represents one or more patches applied to a source control management system (aka repository). So, why will I be using patch and commit interchangeably? Because…&lt;/p&gt;
+
+&lt;h2 id=&quot;1-patch-to-1-commit&quot;&gt;1 Patch to 1 Commit&lt;/h2&gt;
+
+&lt;p&gt;The right way to do software engineering is to identify a small, easily reviewed, logical change (SLC) that does not break the build or tests.&lt;/p&gt;
+
+&lt;p&gt;Be practical when making this determination: if a change can’t be made small then choose the smallest that is still a logical change. For example, logically you might be able to divide up a large refactoring change into several trivial refactoring changes, but it may be more practical to propose or commit them together.&lt;/p&gt;
+
+&lt;p&gt;The SLC should be represented in 1 patch that is then applied to the repository in 1 commit. Why? Because:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;It is easier to review and check correctness of small changes than large ones. Why is it easier to review? Smaller changes have less characters to read. They also make it easier to keep discussions focused on the small details to ensure correctness.&lt;/li&gt;
+  &lt;li&gt;It can be easily and cleanly reverted if it’s wrong.&lt;/li&gt;
+  &lt;li&gt;It makes it easy to bisect commits (i.e. use “git bisect”) to find regressions and progressions.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Finding the SLC is a skill, but here’s a general strategy I do when I can’t identify it from the get-go:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Free flow write code and checkpoint my progress via “git commit” whenever I want until I get something working end-to-end.&lt;/li&gt;
+  &lt;li&gt;Aggressively combine all the commits produced in (1) using “git commit –amend” or “git rebase -i” into logical commits.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;This results in one or more SLC commits. Nobody knows how many times I had to fix some silly syntax error or that I forgot to add a file at one point…just like it should be.&lt;/p&gt;
+
+&lt;h1 id=&quot;rebase-or-merge&quot;&gt;Rebase or merge?&lt;/h1&gt;
+
+&lt;p&gt;Now that 1 patch is 1 commit we can get to the primary motivation for this post. What is the best merge strategy?&lt;/p&gt;
+
+&lt;p&gt;Rebase locally then optionally merge.&lt;/p&gt;
+
+&lt;p&gt;Why? Because:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;It helps ensure that each SLC is conflict free, which is required to not break the build.&lt;/li&gt;
+  &lt;li&gt;It requires that conflicts found in (1)  are addressed in each SLC, which helps also ensure that each SLC does not break the build or tests.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;After rebasing, a build and test run should be performed and fixes for any failures should be combined with the appropriate SLCs to ensure that each SLC continues to not break the build or tests. When ready to push the changes (to a review branch or to the primary branch), repeat the rebase process until there are 0 conflicts. If working in a topic branch (i.e. a non-primary branch) and pushing to the primary branch (e.g. origin/master) now is the time to optionally merge it using “git merge” and then “git push” to the remote. Otherwise, just push the commits to the remote now.&lt;/p&gt;
+
+&lt;p&gt;What is the reason to wait until &lt;strong&gt;after&lt;/strong&gt; rebasing to “git merge”? &lt;strong&gt;Why not “git merge” from the get-go?&lt;/strong&gt; Doing a “git merge” from the get-go would create a merge commit. If there were any conflicts then they would be resolved here, not in the SLCs. After resolution it is no longer technically correct to call the commits under the merge commit SLCs because they don’t build individually or may cause test failures (or both). This is an important property that should be preserved to make it easy in the future to bisect commits to find a regression or progression. That’s why a “git merge”, if done at all, should be done &lt;strong&gt;after&lt;/strong&gt; rebasing.&lt;/p&gt;
+
+&lt;p&gt;What’s the benefit of doing a “git merge” then? It really only benefits a repo archeologist: the merge commit marks in the timeline (graphically seen in gitk) that a set of commits originated from a topic branch before being merged into the primary branch. That’s it.&lt;/p&gt;</content><author><name></name></author><summary type="html">What’s this about?</summary></entry><entry><title type="html">Document your steps through scripts</title><link href="https://dabates.com/2021/07/17/write-a-script.html" rel="alternate" type="text/html" title="Document your steps through scripts" /><published>2021-07-17T05:02:00+00:00</published><updated>2021-07-17T05:02:00+00:00</updated><id>https://dabates.com/2021/07/17/write-a-script</id><content type="html" xml:base="https://dabates.com/2021/07/17/write-a-script.html">&lt;p&gt;Step 1. Step 2. Step 3…and then sometimes you’re done…setting up your workstation, pulling some data from your phone, or trying to bring up a &lt;a href=&quot;https://jekyllrb.com/docs/installation/macos/&quot; target=&quot;_blank&quot; rel=&quot;noreferrer noopener&quot;&gt;blog&lt;/a&gt;. Sometimes not, sometimes there are more steps. Why not write a script instead?&lt;/p&gt;
+
+&lt;p&gt;A script can both document the steps and provide a way for the computer to run them for you. The disadvantage of writing a script is the time it takes to do so.&lt;/p&gt;
+
+&lt;p&gt;One strategy I’ve found is to iteratively develop the script over a few runs of the same steps. I’ll start out with a script that is mostly comments or just a URL reference to the steps. Then flush it out making many hardcoded assumptions. Then I’ll parameterize it and flush it out more. Each time I work on the script I’ll devote only as much time as I’m willing to: 5 minutes, 10 minutes, 30 minutes, and then move on with my day. Eventually I have a script.&lt;/p&gt;
+
+&lt;p&gt;This is the strategy I used to write the &lt;a href=&quot;https://github.com/dydz/dydz.github.io/blob/main/configure-machine-for-blogging&quot; target=&quot;_blank&quot; rel=&quot;noreferrer noopener&quot;&gt;script to configure my machine for blogging&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;example&quot;&gt;Example&lt;/h2&gt;
+
+&lt;p&gt;To make this post more concrete, I’ll walk through creating a part of my &lt;a href=&quot;https://github.com/dydz/dydz.github.io/blob/main/configure-machine-for-blogging&quot; target=&quot;_blank&quot; rel=&quot;noreferrer noopener&quot;&gt;configure-machine-for-blogging&lt;/a&gt; script from scratch.&lt;/p&gt;
+
+&lt;p&gt;First I open my browser to &lt;a href=&quot;https://jekyllrb.com/docs/installation/macos&quot; target=&quot;_blank&quot; rel=&quot;noreferrer noopener&quot;&gt;https://jekyllrb.com/docs/installation/macos&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/jekyll-install-command-line-tools.png&quot; alt=&quot;Jekyll's first step: Install command line tools by running xcode-select --install&quot; width=&quot;567&quot; height=&quot;423&quot; srcset=&quot;/assets/images/jekyll-install-command-line-tools.png 1x, /assets/images/jekyll-install-command-line-tools@2x.png 2x&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Then I create a new text file with:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#!/bin/sh&lt;/span&gt;
+
+xcode-select &lt;span class=&quot;nt&quot;&gt;--install&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Boom! I keep myself focused on writing the script just for me and my machine:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#!/bin/sh&lt;/span&gt;
+
+xcode-select &lt;span class=&quot;nt&quot;&gt;--install&lt;/span&gt;
+
+&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;SDKROOT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;xcrun &lt;span class=&quot;nt&quot;&gt;--show-sdk-path&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now I run my script. Next I hit section &lt;a href=&quot;https://jekyllrb.com/docs/installation/macos/#install-ruby&quot; target=&quot;_blank&quot; rel=&quot;noreferrer noopener&quot;&gt;Install Ruby&lt;/a&gt; and read through it. Then I amend my script to ignore the output of “xcode-select” and check if “ruby” is in my PATH because the latter is the invariant:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#!/bin/sh&lt;/span&gt;
+
+xcode-select &lt;span class=&quot;nt&quot;&gt;--install&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;/dev/null 2&amp;gt;&amp;amp;1
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!&lt;/span&gt; which ruby &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;/dev/null 2&amp;gt;&amp;amp;1&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then
+    &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Couldn't find ruby. Is it installed?&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&amp;amp;2
+    &lt;span class=&quot;nb&quot;&gt;exit &lt;/span&gt;1
+&lt;span class=&quot;k&quot;&gt;fi
+
+&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;SDKROOT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;xcrun &lt;span class=&quot;nt&quot;&gt;--show-sdk-path&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;By the way, I redirect my “echo” output to standard error (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&amp;gt;&amp;amp;2&lt;/code&gt;) since such a message reads like an error. This also future proofs the script for use in a &lt;a href=&quot;https://en.wikipedia.org/wiki/Pipeline_(Unix&quot; target=&quot;_blank&quot; rel=&quot;noreferrer noopener&quot;&gt;pipeline&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Continuing, I skip some sections that don’t apply to my machine and get to the &lt;a href=&quot;https://jekyllrb.com/docs/installation/macos/#install-jekyll&quot; target=&quot;_blank&quot; rel=&quot;noreferrer noopener&quot;&gt;Install Jekyl&lt;/a&gt; section:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/jekyll-install-jekyll.png&quot; alt=&quot;Jekyll's third step: Install Jekyll&quot; width=&quot;561&quot; height=&quot;574&quot; srcset=&quot;/assets/images/jekyll-install-jekyll.png 1x, /assets/images/jekyll-install-jekyll@2x.png 2x&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;It tells me to install Jekyll. Then get my Ruby version to build the PATH to export, but it only uses the major and minor version numbers. I chose to compute that version string and after reading the Ruby API docs came up with a Ruby script and encoded that into my shell script:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#!/bin/sh&lt;/span&gt;
+
+xcode-select &lt;span class=&quot;nt&quot;&gt;--install&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;/dev/null 2&amp;gt;&amp;amp;1
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!&lt;/span&gt; which ruby &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;/dev/null 2&amp;gt;&amp;amp;1&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then
+    &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Couldn't find ruby. Is it installed?&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&amp;amp;2
+    &lt;span class=&quot;nb&quot;&gt;exit &lt;/span&gt;1
+&lt;span class=&quot;k&quot;&gt;fi
+
+&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;SDKROOT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;xcrun &lt;span class=&quot;nt&quot;&gt;--show-sdk-path&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt;
+gem &lt;span class=&quot;nb&quot;&gt;install&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--user-install&lt;/span&gt; bundler jekyll
+
+&lt;span class=&quot;nv&quot;&gt;rubyVersion&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;ruby &lt;span class=&quot;nt&quot;&gt;-e&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'puts [RbConfig::CONFIG[&quot;MAJOR&quot;], RbConfig::CONFIG[&quot;MINOR&quot;], 0].join(&quot;.&quot;)'&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# Ignore teeny version&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;pathToRubyGemBinaryDirectory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/.gem/ruby/&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$rubyVersion&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/bin&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Now I have a variable  &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pathToRubyGemBinaryDirectory&lt;/code&gt; whose value is exactly the path that needs to be in my PATH. I only need to export it if it’s not already in my PATH. I wrote some helper functions to check if it’s already in my PATH. When I got to the part of exporting the PATH and amending my .zshrc I chose to just emit instructions to do this for now because I keep that file organized and didn’t want to code something more involved:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;#!/bin/sh&lt;/span&gt;
+
+hasDirectoryInPathLikeVariable&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    ... &lt;span class=&quot;c&quot;&gt;# Elided for brevity. &lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+hasDirectoryInPathEnvironmentVariable&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    ... &lt;span class=&quot;c&quot;&gt;# Elided for brevity. &lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+xcode-select &lt;span class=&quot;nt&quot;&gt;--install&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;/dev/null 2&amp;gt;&amp;amp;1
+
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!&lt;/span&gt; which ruby &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;/dev/null 2&amp;gt;&amp;amp;1&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then
+    &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Couldn't find ruby. Is it installed?&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&amp;amp;2
+    &lt;span class=&quot;nb&quot;&gt;exit &lt;/span&gt;1
+&lt;span class=&quot;k&quot;&gt;fi
+
+&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;SDKROOT&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;xcrun &lt;span class=&quot;nt&quot;&gt;--show-sdk-path&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt;
+gem &lt;span class=&quot;nb&quot;&gt;install&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--user-install&lt;/span&gt; bundler jekyll
+
+&lt;span class=&quot;nv&quot;&gt;rubyVersion&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;ruby &lt;span class=&quot;nt&quot;&gt;-e&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;'puts [RbConfig::CONFIG[&quot;MAJOR&quot;], RbConfig::CONFIG[&quot;MINOR&quot;], 0].join(&quot;.&quot;)'&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# Ignore teeny version&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;pathToRubyGemBinaryDirectory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$HOME&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/.gem/ruby/&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$rubyVersion&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/bin&quot;&lt;/span&gt;
+
+&lt;span class=&quot;nv&quot;&gt;hasRubyGemBinaryDirectoryInPath&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;hasDirectoryInPathEnvironmentVariable &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$pathToRubyGemBinaryDirectory&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$hasRubyGemBinaryDirectoryInPath&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;0&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then
+    &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Ensure the following is in your PATH:&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&amp;amp;2
+    &lt;span class=&quot;nb&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;    &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$pathToRubyGemBinaryDirectory&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&amp;amp;2
+&lt;span class=&quot;k&quot;&gt;fi&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;And that’s it for this example. The script evolved from this: I encoded more steps, enabled some diagnostics, and ran it through &lt;a href=&quot;https://www.shellcheck.net&quot; target=&quot;_blank&quot; rel=&quot;noreferrer noopener&quot;&gt;ShellCheck&lt;/a&gt;. The full script is at:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/dydz/dydz.github.io/blob/main/configure-machine-for-blogging&quot; target=&quot;_blank&quot; rel=&quot;noreferrer noopener&quot;&gt;https://github.com/dydz/dydz.github.io/blob/main/configure-machine-for-blogging&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Step 1. Step 2. Step 3…and then sometimes you’re done…setting up your workstation, pulling some data from your phone, or trying to bring up a blog. Sometimes not, sometimes there are more steps. Why not write a script instead?</summary></entry><entry><title type="html">Welcome to my blog!</title><link href="https://dabates.com/2021/06/20/welcome.html" rel="alternate" type="text/html" title="Welcome to my blog!" /><published>2021-06-20T18:26:17+00:00</published><updated>2021-06-20T18:26:17+00:00</updated><id>https://dabates.com/2021/06/20/welcome</id><content type="html" xml:base="https://dabates.com/2021/06/20/welcome.html">&lt;p&gt;I did it! And you found me!&lt;/p&gt;</content><author><name></name></author><summary type="html">I did it! And you found me!</summary></entry></feed>

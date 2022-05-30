@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Document your steps through scripts | Daniel Bates</title>
+<meta name="generator" content="Jekyll v3.9.0" />
+<meta property="og:title" content="Document your steps through scripts" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Consider writing a script instead of documenting steps. A script both documents steps and provides a way for the computer to run them for you. Let’s write one!" />
+<meta property="og:description" content="Consider writing a script instead of documenting steps. A script both documents steps and provides a way for the computer to run them for you. Let’s write one!" />
+<link rel="canonical" href="https://dabates.com/2021/07/17/write-a-script.html" />
+<meta property="og:url" content="https://dabates.com/2021/07/17/write-a-script.html" />
+<meta property="og:site_name" content="Daniel Bates" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-07-17T05:02:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Document your steps through scripts" />
+<script type="application/ld+json">
+{"headline":"Document your steps through scripts","dateModified":"2021-07-17T05:02:00+00:00","datePublished":"2021-07-17T05:02:00+00:00","description":"Consider writing a script instead of documenting steps. A script both documents steps and provides a way for the computer to run them for you. Let’s write one!","url":"https://dabates.com/2021/07/17/write-a-script.html","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"https://dabates.com/2021/07/17/write-a-script.html"},"@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://dabates.com/feed.xml" title="Daniel Bates" /><meta http-equiv="Content-Security-Policy" content="default-src 'self'">
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Daniel Bates</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+<div class="wrapper">
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Document your steps through scripts</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2021-07-17T05:02:00+00:00" itemprop="datePublished">
+        Jul 17, 2021
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>Step 1. Step 2. Step 3…and then sometimes you’re done…setting up your workstation, pulling some data from your phone, or trying to bring up a <a href="https://jekyllrb.com/docs/installation/macos/" target="_blank" rel="noreferrer noopener">blog</a>. Sometimes not, sometimes there are more steps. Why not write a script instead?</p>
+
+<p>A script can both document the steps and provide a way for the computer to run them for you. The disadvantage of writing a script is the time it takes to do so.</p>
+
+<p>One strategy I’ve found is to iteratively develop the script over a few runs of the same steps. I’ll start out with a script that is mostly comments or just a URL reference to the steps. Then flush it out making many hardcoded assumptions. Then I’ll parameterize it and flush it out more. Each time I work on the script I’ll devote only as much time as I’m willing to: 5 minutes, 10 minutes, 30 minutes, and then move on with my day. Eventually I have a script.</p>
+
+<p>This is the strategy I used to write the <a href="https://github.com/dydz/dydz.github.io/blob/main/configure-machine-for-blogging" target="_blank" rel="noreferrer noopener">script to configure my machine for blogging</a>.</p>
+
+<h2 id="example">Example</h2>
+
+<p>To make this post more concrete, I’ll walk through creating a part of my <a href="https://github.com/dydz/dydz.github.io/blob/main/configure-machine-for-blogging" target="_blank" rel="noreferrer noopener">configure-machine-for-blogging</a> script from scratch.</p>
+
+<p>First I open my browser to <a href="https://jekyllrb.com/docs/installation/macos" target="_blank" rel="noreferrer noopener">https://jekyllrb.com/docs/installation/macos</a>.</p>
+
+<p><img src="/assets/images/jekyll-install-command-line-tools.png" alt="Jekyll's first step: Install command line tools by running xcode-select --install" width="567" height="423" srcset="/assets/images/jekyll-install-command-line-tools.png 1x, /assets/images/jekyll-install-command-line-tools@2x.png 2x" /></p>
+
+<p>Then I create a new text file with:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/sh</span>
+
+xcode-select <span class="nt">--install</span>
+</code></pre></div></div>
+
+<p>Boom! I keep myself focused on writing the script just for me and my machine:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/sh</span>
+
+xcode-select <span class="nt">--install</span>
+
+<span class="nb">export </span><span class="nv">SDKROOT</span><span class="o">=</span><span class="si">$(</span>xcrun <span class="nt">--show-sdk-path</span><span class="si">)</span>
+</code></pre></div></div>
+
+<p>Now I run my script. Next I hit section <a href="https://jekyllrb.com/docs/installation/macos/#install-ruby" target="_blank" rel="noreferrer noopener">Install Ruby</a> and read through it. Then I amend my script to ignore the output of “xcode-select” and check if “ruby” is in my PATH because the latter is the invariant:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/sh</span>
+
+xcode-select <span class="nt">--install</span> <span class="o">&gt;</span>/dev/null 2&gt;&amp;1
+
+<span class="k">if</span> <span class="o">!</span> which ruby <span class="o">&gt;</span>/dev/null 2&gt;&amp;1<span class="p">;</span> <span class="k">then
+    </span><span class="nb">echo</span> <span class="s2">"Couldn't find ruby. Is it installed?"</span> <span class="o">&gt;</span>&amp;2
+    <span class="nb">exit </span>1
+<span class="k">fi
+
+</span><span class="nb">export </span><span class="nv">SDKROOT</span><span class="o">=</span><span class="si">$(</span>xcrun <span class="nt">--show-sdk-path</span><span class="si">)</span>
+</code></pre></div></div>
+
+<p>By the way, I redirect my “echo” output to standard error (<code class="language-plaintext highlighter-rouge">&gt;&amp;2</code>) since such a message reads like an error. This also future proofs the script for use in a <a href="https://en.wikipedia.org/wiki/Pipeline_(Unix" target="_blank" rel="noreferrer noopener">pipeline</a>.</p>
+
+<p>Continuing, I skip some sections that don’t apply to my machine and get to the <a href="https://jekyllrb.com/docs/installation/macos/#install-jekyll" target="_blank" rel="noreferrer noopener">Install Jekyl</a> section:</p>
+
+<p><img src="/assets/images/jekyll-install-jekyll.png" alt="Jekyll's third step: Install Jekyll" width="561" height="574" srcset="/assets/images/jekyll-install-jekyll.png 1x, /assets/images/jekyll-install-jekyll@2x.png 2x" /></p>
+
+<p>It tells me to install Jekyll. Then get my Ruby version to build the PATH to export, but it only uses the major and minor version numbers. I chose to compute that version string and after reading the Ruby API docs came up with a Ruby script and encoded that into my shell script:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/sh</span>
+
+xcode-select <span class="nt">--install</span> <span class="o">&gt;</span>/dev/null 2&gt;&amp;1
+
+<span class="k">if</span> <span class="o">!</span> which ruby <span class="o">&gt;</span>/dev/null 2&gt;&amp;1<span class="p">;</span> <span class="k">then
+    </span><span class="nb">echo</span> <span class="s2">"Couldn't find ruby. Is it installed?"</span> <span class="o">&gt;</span>&amp;2
+    <span class="nb">exit </span>1
+<span class="k">fi
+
+</span><span class="nb">export </span><span class="nv">SDKROOT</span><span class="o">=</span><span class="si">$(</span>xcrun <span class="nt">--show-sdk-path</span><span class="si">)</span>
+gem <span class="nb">install</span> <span class="nt">--user-install</span> bundler jekyll
+
+<span class="nv">rubyVersion</span><span class="o">=</span><span class="si">$(</span>ruby <span class="nt">-e</span> <span class="s1">'puts [RbConfig::CONFIG["MAJOR"], RbConfig::CONFIG["MINOR"], 0].join(".")'</span><span class="si">)</span> <span class="c"># Ignore teeny version</span>
+<span class="nv">pathToRubyGemBinaryDirectory</span><span class="o">=</span><span class="s2">"</span><span class="nv">$HOME</span><span class="s2">/.gem/ruby/</span><span class="nv">$rubyVersion</span><span class="s2">/bin"</span>
+</code></pre></div></div>
+
+<p>Now I have a variable  <code class="language-plaintext highlighter-rouge">pathToRubyGemBinaryDirectory</code> whose value is exactly the path that needs to be in my PATH. I only need to export it if it’s not already in my PATH. I wrote some helper functions to check if it’s already in my PATH. When I got to the part of exporting the PATH and amending my .zshrc I chose to just emit instructions to do this for now because I keep that file organized and didn’t want to code something more involved:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/sh</span>
+
+hasDirectoryInPathLikeVariable<span class="o">()</span>
+<span class="o">{</span>
+    ... <span class="c"># Elided for brevity. </span>
+<span class="o">}</span>
+
+hasDirectoryInPathEnvironmentVariable<span class="o">()</span>
+<span class="o">{</span>
+    ... <span class="c"># Elided for brevity. </span>
+<span class="o">}</span>
+
+xcode-select <span class="nt">--install</span> <span class="o">&gt;</span>/dev/null 2&gt;&amp;1
+
+<span class="k">if</span> <span class="o">!</span> which ruby <span class="o">&gt;</span>/dev/null 2&gt;&amp;1<span class="p">;</span> <span class="k">then
+    </span><span class="nb">echo</span> <span class="s2">"Couldn't find ruby. Is it installed?"</span> <span class="o">&gt;</span>&amp;2
+    <span class="nb">exit </span>1
+<span class="k">fi
+
+</span><span class="nb">export </span><span class="nv">SDKROOT</span><span class="o">=</span><span class="si">$(</span>xcrun <span class="nt">--show-sdk-path</span><span class="si">)</span>
+gem <span class="nb">install</span> <span class="nt">--user-install</span> bundler jekyll
+
+<span class="nv">rubyVersion</span><span class="o">=</span><span class="si">$(</span>ruby <span class="nt">-e</span> <span class="s1">'puts [RbConfig::CONFIG["MAJOR"], RbConfig::CONFIG["MINOR"], 0].join(".")'</span><span class="si">)</span> <span class="c"># Ignore teeny version</span>
+<span class="nv">pathToRubyGemBinaryDirectory</span><span class="o">=</span><span class="s2">"</span><span class="nv">$HOME</span><span class="s2">/.gem/ruby/</span><span class="nv">$rubyVersion</span><span class="s2">/bin"</span>
+
+<span class="nv">hasRubyGemBinaryDirectoryInPath</span><span class="o">=</span><span class="si">$(</span>hasDirectoryInPathEnvironmentVariable <span class="s2">"</span><span class="nv">$pathToRubyGemBinaryDirectory</span><span class="s2">"</span><span class="si">)</span>
+<span class="k">if</span> <span class="o">[</span> <span class="s2">"</span><span class="nv">$hasRubyGemBinaryDirectoryInPath</span><span class="s2">"</span> <span class="o">=</span> <span class="s2">"0"</span> <span class="o">]</span><span class="p">;</span> <span class="k">then
+    </span><span class="nb">echo</span> <span class="s2">"Ensure the following is in your PATH:"</span> <span class="o">&gt;</span>&amp;2
+    <span class="nb">echo</span> <span class="s2">"    </span><span class="nv">$pathToRubyGemBinaryDirectory</span><span class="s2">"</span> <span class="o">&gt;</span>&amp;2
+<span class="k">fi</span>
+</code></pre></div></div>
+
+<p>And that’s it for this example. The script evolved from this: I encoded more steps, enabled some diagnostics, and ran it through <a href="https://www.shellcheck.net" target="_blank" rel="noreferrer noopener">ShellCheck</a>. The full script is at:</p>
+
+<p><a href="https://github.com/dydz/dydz.github.io/blob/main/configure-machine-for-blogging" target="_blank" rel="noreferrer noopener">https://github.com/dydz/dydz.github.io/blob/main/configure-machine-for-blogging</a></p>
+
+
+  </div><a class="u-url" href="/2021/07/17/write-a-script.html" hidden></a>
+</article>
+
+</div>
+</main><footer class="site-footer h-card">
+<div class="wrapper"><ul class="social-media-list"><li><a href="https://github.com/dydz"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">dydz</span></a></li><li><a href="https://www.linkedin.com/in/daniel-bates-43a2111b"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#linkedin"></use></svg> <span class="username">daniel-bates-43a2111b</span></a></li><li><a href="https://www.twitter.com/_dydz"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">_dydz</span></a></li><li><a href="/feed.xml"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#rss"></use></svg> <span>RSS</span></a></li><li><a href="mailto:dydz%40intudata.com"><span class="username">dydz@intudata.com</span></a></li></ul>
+</div>
+</footer>
+</body>
+</html>
